@@ -41,7 +41,7 @@ export function MapView() {
       pitch: initialView.pitch,
       bearing: initialView.bearing,
       attributionControl: { compact: true },
-      antialias: true,
+      
     });
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "bottom-right");
     map.on("move", () => {
@@ -81,7 +81,7 @@ export function MapView() {
       passText(d.name) || passText(d.operator) || passText(d.country)
     );
 
-    const deckLayers: unknown[] = [];
+    const deckLayers: any[] = [];
 
     if (layers.cables) {
       deckLayers.push(

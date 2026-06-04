@@ -175,9 +175,9 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
     if (!q.trim()) return [];
     const term = q.toLowerCase();
     const all = [
-      ...DATA.plants.map((p) => ({ kind: "plant" as const, ...p })),
-      ...DATA.substations.map((s) => ({ kind: "substation" as const, ...s })),
-      ...DATA.datacenters.map((d) => ({ kind: "datacenter" as const, ...d })),
+      ...DATA.plants.map((p) => ({ ...p, kind: "plant" as const })),
+      ...DATA.substations.map((s) => ({ ...s, kind: "substation" as const })),
+      ...DATA.datacenters.map((d) => ({ ...d, kind: "datacenter" as const })),
     ];
     return all
       .filter((a) => a.name.toLowerCase().includes(term) || ("operator" in a && a.operator?.toLowerCase().includes(term)))
