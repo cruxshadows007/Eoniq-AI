@@ -251,7 +251,7 @@ export function MapView() {
     }
 
     overlay.setProps({ layers: deckLayers });
-  }, [mapReady, layers, enabledTechs, search, capacityRange, yearRange, select]);
+  }, [mapReady, layers, enabledTechs, search, capacityRange, yearRange, select, DATA]);
 
   return (
     <div className="absolute inset-0">
