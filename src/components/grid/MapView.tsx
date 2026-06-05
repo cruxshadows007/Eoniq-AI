@@ -19,8 +19,10 @@ export function MapView() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MlMap | null>(null);
   const overlayRef = useRef<MapboxOverlay | null>(null);
+  const hoverRef = useRef<HoverInfo>(null);
   const [hover, setHover] = useState<HoverInfo>(null);
   const [viewSnap, setViewSnap] = useState({ lon: 8, lat: 32, zoom: 2.2 });
+  const [mapReady, setMapReady] = useState(false);
 
   const layers = useGrid((s) => s.layers);
   const enabledTechs = useGrid((s) => s.enabledTechs);
@@ -28,42 +30,89 @@ export function MapView() {
   const capacityRange = useGrid((s) => s.capacityRange);
   const yearRange = useGrid((s) => s.yearRange);
   const select = useGrid((s) => s.select);
-  const initialView = useGrid.getState().view;
 
   // Init map once
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: BASEMAP,
-      center: [initialView.longitude, initialView.latitude],
-      zoom: initialView.zoom,
-      pitch: initialView.pitch,
-      bearing: initialView.bearing,
-      attributionControl: { compact: true },
-      
-    });
+    if (typeof window === "undefined") return;
+    if (!containerRef.current) {
+      console.error("[GridAtlas] containerRef is null at init");
+      return;
+    }
+    if (mapRef.current) return;
+
+    const el = containerRef.current;
+    const rect = el.getBoundingClientRect();
+    console.info("[GridAtlas] init container size:", rect.width, "x", rect.height);
+    if (rect.width === 0 || rect.height === 0) {
+      console.warn("[GridAtlas] map container has zero dimensions — map will not render until resized");
+    }
+
+    const initialView = useGrid.getState().view;
+
+    let map: MlMap;
+    try {
+      map = new maplibregl.Map({
+        container: el,
+        style: BASEMAP,
+        center: [initialView.longitude, initialView.latitude],
+        zoom: initialView.zoom,
+        pitch: initialView.pitch,
+        bearing: initialView.bearing,
+        attributionControl: { compact: true },
+      });
+      console.info("[GridAtlas] maplibregl.Map instantiated");
+    } catch (err) {
+      console.error("[GridAtlas] failed to instantiate maplibregl.Map", err);
+      return;
+    }
+
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "bottom-right");
+
+    map.on("error", (e) => {
+      console.error("[GridAtlas] map error:", e?.error ?? e);
+    });
+
+    map.on("load", () => {
+      console.info("[GridAtlas] map load event fired");
+      // Attach deck.gl overlay AFTER load to avoid IControl race with MapLibre v5
+      try {
+        const overlay = new MapboxOverlay({ interleaved: false, layers: [] });
+        map.addControl(overlay as unknown as maplibregl.IControl);
+        overlayRef.current = overlay;
+        setMapReady(true);
+        console.info("[GridAtlas] deck.gl MapboxOverlay attached");
+      } catch (err) {
+        console.error("[GridAtlas] failed to attach MapboxOverlay", err);
+        // Still mark ready so the map is usable without overlay
+        setMapReady(true);
+      }
+    });
+
     map.on("move", () => {
       const c = map.getCenter();
       setViewSnap({ lon: c.lng, lat: c.lat, zoom: map.getZoom() });
     });
-    const overlay = new MapboxOverlay({ interleaved: false, layers: [] });
-    map.addControl(overlay as unknown as maplibregl.IControl);
+
     mapRef.current = map;
-    overlayRef.current = overlay;
+
+    // Resize observer to handle late layout (Suspense fallback → real mount, panel collapse, etc.)
+    const ro = new ResizeObserver(() => {
+      try { map.resize(); } catch { /* noop */ }
+    });
+    ro.observe(el);
+
     return () => {
+      ro.disconnect();
       map.remove();
       mapRef.current = null;
       overlayRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update deck layers when filters change
+  // Update deck layers when filters change (overlay only — not the map itself)
   useEffect(() => {
     const overlay = overlayRef.current;
-    if (!overlay) return;
+    if (!overlay || !mapReady) return;
 
     const passText = (s: string) => !search || s.toLowerCase().includes(search);
 
@@ -81,6 +130,17 @@ export function MapView() {
       passText(d.name) || passText(d.operator) || passText(d.country)
     );
 
+    const onHoverFor = (kind: NonNullable<HoverInfo>["kind"]) => (info: any) => {
+      if (info.object) {
+        const next = { x: info.x, y: info.y, kind, object: info.object } as HoverInfo;
+        hoverRef.current = next;
+        setHover(next);
+      } else if (hoverRef.current?.kind === kind) {
+        hoverRef.current = null;
+        setHover(null);
+      }
+    };
+
     const deckLayers: any[] = [];
 
     if (layers.cables) {
@@ -88,18 +148,14 @@ export function MapView() {
         new PathLayer({
           id: "cables",
           data: DATA.cables,
-          getPath: (d) => d.path,
+          getPath: (d: any) => d.path,
           getColor: [0, 240, 255, 110],
           getWidth: 1.6,
           widthMinPixels: 1,
           widthMaxPixels: 3,
           pickable: true,
-          onHover: (info) => {
-            if (info.object) {
-              setHover({ x: info.x, y: info.y, kind: "cable", object: info.object });
-            } else if (hover?.kind === "cable") setHover(null);
-          },
-          onClick: (info) => info.object && select({ id: info.object.id, kind: "cable" }),
+          onHover: onHoverFor("cable"),
+          onClick: (info: any) => info.object && select({ id: info.object.id, kind: "cable" }),
         })
       );
     }
@@ -109,21 +165,18 @@ export function MapView() {
         new PathLayer({
           id: "transmission",
           data: DATA.lines,
-          getPath: (d) => d.path,
-          getColor: (d) => {
+          getPath: (d: any) => d.path,
+          getColor: (d: any) => {
             const v = d.voltageKV;
             const a = Math.min(220, 90 + v * 0.18);
             return [83, 167, 255, a];
           },
-          getWidth: (d) => 0.8 + d.voltageKV / 250,
+          getWidth: (d: any) => 0.8 + d.voltageKV / 250,
           widthMinPixels: 0.6,
           widthMaxPixels: 4,
           pickable: true,
-          onHover: (info) => {
-            if (info.object) setHover({ x: info.x, y: info.y, kind: "line", object: info.object });
-            else if (hover?.kind === "line") setHover(null);
-          },
-          onClick: (info) => info.object && select({ id: info.object.id, kind: "line" }),
+          onHover: onHoverFor("line"),
+          onClick: (info: any) => info.object && select({ id: info.object.id, kind: "line" }),
         })
       );
     }
@@ -142,10 +195,7 @@ export function MapView() {
           radiusMinPixels: 1.4,
           radiusMaxPixels: 6,
           pickable: true,
-          onHover: (info) => {
-            if (info.object) setHover({ x: info.x, y: info.y, kind: "substation", object: info.object });
-            else if (hover?.kind === "substation") setHover(null);
-          },
+          onHover: onHoverFor("substation"),
           onClick: (info) => info.object && select({ id: info.object.id, kind: "substation" }),
         })
       );
@@ -171,13 +221,8 @@ export function MapView() {
           radiusMinPixels: 2,
           radiusMaxPixels: 22,
           pickable: true,
-          updateTriggers: {
-            getFillColor: [enabledTechs],
-          },
-          onHover: (info) => {
-            if (info.object) setHover({ x: info.x, y: info.y, kind: "plant", object: info.object });
-            else if (hover?.kind === "plant") setHover(null);
-          },
+          updateTriggers: { getFillColor: [enabledTechs] },
+          onHover: onHoverFor("plant"),
           onClick: (info) => info.object && select({ id: info.object.id, kind: "plant" }),
         })
       );
@@ -197,21 +242,18 @@ export function MapView() {
           radiusMinPixels: 2,
           radiusMaxPixels: 14,
           pickable: true,
-          onHover: (info) => {
-            if (info.object) setHover({ x: info.x, y: info.y, kind: "datacenter", object: info.object });
-            else if (hover?.kind === "datacenter") setHover(null);
-          },
+          onHover: onHoverFor("datacenter"),
           onClick: (info) => info.object && select({ id: info.object.id, kind: "datacenter" }),
         })
       );
     }
 
     overlay.setProps({ layers: deckLayers });
-  }, [layers, enabledTechs, search, capacityRange, yearRange, select, hover?.kind]);
+  }, [mapReady, layers, enabledTechs, search, capacityRange, yearRange, select]);
 
   return (
     <div className="absolute inset-0">
-      <div ref={containerRef} className="absolute inset-0" />
+      <div ref={containerRef} className="absolute inset-0 h-full w-full" />
       {/* subtle vignette + grid overlay */}
       <div className="pointer-events-none absolute inset-0 grid-bg opacity-40 mix-blend-overlay" />
       <div
