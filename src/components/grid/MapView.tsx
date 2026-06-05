@@ -3,7 +3,8 @@ import maplibregl, { type Map as MlMap } from "maplibre-gl";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { ScatterplotLayer, PathLayer } from "@deck.gl/layers";
 import { useGrid } from "@/lib/grid-store";
-import { DATA, TECH_COLOR, TECH_LABEL, type AnyAsset, type PowerPlant, type Substation, type DataCenter } from "@/lib/grid-data";
+import { TECH_COLOR, TECH_LABEL, type AnyAsset, type PowerPlant, type Substation, type DataCenter } from "@/lib/grid-data";
+import { useGridData } from "@/lib/grid-source";
 
 const BASEMAP =
   "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";

@@ -294,7 +294,8 @@ function RangeBlock({
 }
 
 function FavoritesList({ ids }: { ids: string[] }) {
-  const all = [...DATA.plants, ...DATA.substations, ...DATA.datacenters];
+  const { data } = useGridData();
+  const all = [...data.plants, ...data.substations, ...data.datacenters];
   const items = ids.map((id) => all.find((a) => a.id === id)).filter(Boolean) as typeof all;
   const select = useGrid((s) => s.select);
   return (
