@@ -31,6 +31,7 @@ export function MapView() {
   const capacityRange = useGrid((s) => s.capacityRange);
   const yearRange = useGrid((s) => s.yearRange);
   const select = useGrid((s) => s.select);
+  const { data: DATA } = useGridData();
 
   // Init map once
   useEffect(() => {
