@@ -46,6 +46,15 @@ export function LeftPanel() {
   const yearRange = useGrid((s) => s.yearRange);
   const setYearRange = useGrid((s) => s.setYearRange);
   const favorites = useGrid((s) => s.favorites);
+  const { data, totals: TOTALS } = useGridData();
+  const LAYER_COUNTS: Record<LayerMeta["id"], number> = {
+    plants: data.plants.length,
+    substations: data.substations.length,
+    transmission: data.lines.length,
+    datacenters: data.datacenters.length,
+    cables: data.cables.length,
+  };
+  const LAYERS = LAYER_META.map((l) => ({ ...l, count: LAYER_COUNTS[l.id] }));
 
   return (
     <motion.aside
