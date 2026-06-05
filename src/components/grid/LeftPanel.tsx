@@ -296,7 +296,12 @@ function FavoritesList({ ids }: { ids: string[] }) {
   );
 }
 
+function fmtNum(n: number) {
+  // Locale-stable thousands separator (avoid SSR/CSR hydration mismatch from toLocaleString)
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 function fmt(n: number) {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
-  return n.toLocaleString();
+  return fmtNum(n);
 }
