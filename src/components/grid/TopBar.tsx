@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Command, Maximize2, Minimize2, Ruler, Clock, Globe2, Download, Play, Pause } from "lucide-react";
 import { useGrid } from "@/lib/grid-store";
-import { DATA } from "@/lib/grid-data";
+import { useGridData } from "@/lib/grid-source";
 import { cn } from "@/lib/utils";
 
 export function TopBar() {
@@ -170,19 +170,20 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
   const [q, setQ] = useState("");
   const select = useGrid((s) => s.select);
   const setSearch = useGrid((s) => s.setSearch);
+  const { data } = useGridData();
 
   const results = useMemo(() => {
     if (!q.trim()) return [];
     const term = q.toLowerCase();
     const all = [
-      ...DATA.plants.map((p) => ({ ...p, kind: "plant" as const })),
-      ...DATA.substations.map((s) => ({ ...s, kind: "substation" as const })),
-      ...DATA.datacenters.map((d) => ({ ...d, kind: "datacenter" as const })),
+      ...data.plants.map((p) => ({ ...p, kind: "plant" as const })),
+      ...data.substations.map((s) => ({ ...s, kind: "substation" as const })),
+      ...data.datacenters.map((d) => ({ ...d, kind: "datacenter" as const })),
     ];
     return all
       .filter((a) => a.name.toLowerCase().includes(term) || ("operator" in a && a.operator?.toLowerCase().includes(term)))
       .slice(0, 12);
-  }, [q]);
+  }, [q, data]);
 
   useEffect(() => {
     if (open) setQ("");

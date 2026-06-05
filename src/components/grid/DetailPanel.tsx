@@ -1,16 +1,17 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Star, MapPin, Building2, Zap, Calendar, Gauge, Hash, Download, Share2 } from "lucide-react";
 import { useGrid } from "@/lib/grid-store";
-import { DATA, TECH_HEX, TECH_LABEL, type PowerPlant, type Substation, type DataCenter } from "@/lib/grid-data";
+import { useGridData } from "@/lib/grid-source";
+import { TECH_HEX, TECH_LABEL, type GridDataset, type PowerPlant, type Substation, type DataCenter } from "@/lib/grid-data";
 import { cn } from "@/lib/utils";
 
-function findAsset(id: string) {
+function findAsset(data: GridDataset, id: string) {
   return (
-    DATA.plants.find((p) => p.id === id) ||
-    DATA.substations.find((s) => s.id === id) ||
-    DATA.datacenters.find((d) => d.id === id) ||
-    DATA.lines.find((l) => l.id === id) ||
-    DATA.cables.find((c) => c.id === id)
+    data.plants.find((p) => p.id === id) ||
+    data.substations.find((s) => s.id === id) ||
+    data.datacenters.find((d) => d.id === id) ||
+    data.lines.find((l) => l.id === id) ||
+    data.cables.find((c) => c.id === id)
   );
 }
 
@@ -19,8 +20,9 @@ export function DetailPanel() {
   const select = useGrid((s) => s.select);
   const favs = useGrid((s) => s.favorites);
   const toggleFav = useGrid((s) => s.toggleFavorite);
+  const { data } = useGridData();
 
-  const asset = selected ? findAsset(selected.id) : null;
+  const asset = selected ? findAsset(data, selected.id) : null;
 
   return (
     <AnimatePresence>
