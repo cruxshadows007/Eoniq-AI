@@ -5,7 +5,8 @@ import {
   Mountain, Battery, Server, Zap, Cable, Settings, Eye, EyeOff,
 } from "lucide-react";
 import { useGrid } from "@/lib/grid-store";
-import { TECH_HEX, TECH_LABEL, TOTALS, DATA } from "@/lib/grid-data";
+import { useGridData } from "@/lib/grid-source";
+import { TECH_HEX, TECH_LABEL } from "@/lib/grid-data";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 
@@ -15,12 +16,19 @@ const TECH_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   storage: Battery,
 };
 
-const LAYERS: Array<{ id: "plants" | "substations" | "transmission" | "datacenters" | "cables"; label: string; icon: React.ComponentType<{ className?: string }>; count: number; color: string }> = [
-  { id: "plants", label: "Power Plants", icon: Zap, count: DATA.plants.length, color: TECH_HEX.solar },
-  { id: "substations", label: "Substations", icon: Activity, count: DATA.substations.length, color: TECH_HEX.substation },
-  { id: "transmission", label: "Transmission", icon: Cable, count: DATA.lines.length, color: TECH_HEX.transmission },
-  { id: "datacenters", label: "Data Centers", icon: Server, count: DATA.datacenters.length, color: TECH_HEX.datacenter },
-  { id: "cables", label: "Submarine Cables", icon: Waves, count: DATA.cables.length, color: TECH_HEX.hydrogen },
+type LayerMeta = {
+  id: "plants" | "substations" | "transmission" | "datacenters" | "cables";
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+};
+
+const LAYER_META: LayerMeta[] = [
+  { id: "plants", label: "Power Plants", icon: Zap, color: TECH_HEX.solar },
+  { id: "substations", label: "Substations", icon: Activity, color: TECH_HEX.substation },
+  { id: "transmission", label: "Transmission", icon: Cable, color: TECH_HEX.transmission },
+  { id: "datacenters", label: "Data Centers", icon: Server, color: TECH_HEX.datacenter },
+  { id: "cables", label: "Submarine Cables", icon: Waves, color: TECH_HEX.hydrogen },
 ];
 
 export function LeftPanel() {
@@ -38,6 +46,15 @@ export function LeftPanel() {
   const yearRange = useGrid((s) => s.yearRange);
   const setYearRange = useGrid((s) => s.setYearRange);
   const favorites = useGrid((s) => s.favorites);
+  const { data, totals: TOTALS } = useGridData();
+  const LAYER_COUNTS: Record<LayerMeta["id"], number> = {
+    plants: data.plants.length,
+    substations: data.substations.length,
+    transmission: data.lines.length,
+    datacenters: data.datacenters.length,
+    cables: data.cables.length,
+  };
+  const LAYERS = LAYER_META.map((l) => ({ ...l, count: LAYER_COUNTS[l.id] }));
 
   return (
     <motion.aside
@@ -277,7 +294,8 @@ function RangeBlock({
 }
 
 function FavoritesList({ ids }: { ids: string[] }) {
-  const all = [...DATA.plants, ...DATA.substations, ...DATA.datacenters];
+  const { data } = useGridData();
+  const all = [...data.plants, ...data.substations, ...data.datacenters];
   const items = ids.map((id) => all.find((a) => a.id === id)).filter(Boolean) as typeof all;
   const select = useGrid((s) => s.select);
   return (
