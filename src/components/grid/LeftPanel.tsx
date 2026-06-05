@@ -99,7 +99,7 @@ export function LeftPanel() {
           <Section title="System Telemetry" icon={Activity}>
             <div className="grid grid-cols-2 gap-2">
               <Stat label="Total Assets" value={fmt(TOTALS.assets)} />
-              <Stat label="Capacity" value={`${TOTALS.capacityGW.toLocaleString()} GW`} accent />
+              <Stat label="Capacity" value={`${fmtNum(TOTALS.capacityGW)} GW`} accent />
               <Stat label="Countries" value={String(TOTALS.countries)} />
               <Stat label="Operators" value={String(TOTALS.operators)} />
               <Stat label="Transmission" value={`${(TOTALS.transmissionKm / 1000).toFixed(1)}k km`} />
