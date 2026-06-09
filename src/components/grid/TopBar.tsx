@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Command, Maximize2, Minimize2, Ruler, Clock, Globe2, Download, Play, Pause } from "lucide-react";
+import { toast } from "sonner";
 import { useGrid } from "@/lib/grid-store";
 import { useGridData } from "@/lib/grid-source";
 import { cn } from "@/lib/utils";
@@ -8,6 +9,11 @@ import { cn } from "@/lib/utils";
 export function TopBar() {
   const presentation = useGrid((s) => s.presentationMode);
   const togglePresentation = useGrid((s) => s.togglePresentation);
+  const selected = useGrid((s) => s.selected);
+  const setView = useGrid((s) => s.setView);
+  const measureMode = useGrid((s) => s.measureMode);
+  const toggleMeasure = useGrid((s) => s.toggleMeasure);
+  const { data } = useGridData();
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   useEffect(() => {
@@ -22,10 +28,53 @@ export function TopBar() {
       if (e.key === "l" || e.key === "L") {
         useGrid.getState().toggleLeft();
       }
+      if (e.key === "m" || e.key === "M") {
+        useGrid.getState().toggleMeasure();
+      }
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, []);
+
+  const handleGlobe = useCallback(() => {
+    setView({ longitude: 8, latitude: 32, zoom: 2.2, pitch: 35, bearing: 0 });
+    toast.success("View reset", { description: "Returning to global overview." });
+  }, [setView]);
+
+  const handleMeasure = useCallback(() => {
+    toggleMeasure();
+    toast(measureMode ? "Measure off" : "Measure on", {
+      description: measureMode ? "Measurement tool disabled." : "Click two points on the map to measure distance.",
+    });
+  }, [toggleMeasure, measureMode]);
+
+  const handleExport = useCallback(() => {
+    try {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        counts: {
+          plants: data.plants.length,
+          substations: data.substations.length,
+          datacenters: data.datacenters.length,
+          lines: data.lines.length,
+          cables: data.cables.length,
+        },
+        data,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `gridatlas-export-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Export ready", { description: "Snapshot downloaded as JSON." });
+    } catch (e) {
+      toast.error("Export failed", { description: e instanceof Error ? e.message : String(e) });
+    }
+  }, [data]);
 
   return (
     <>
@@ -47,13 +96,13 @@ export function TopBar() {
 
       {/* Top-right utility cluster */}
       <div className={cn(
-        "absolute top-3 right-3 z-20 flex items-center gap-2 transition-opacity",
+        "absolute top-3 right-3 z-40 flex items-center gap-2 transition-[margin,opacity] duration-300",
         presentation && "opacity-0 pointer-events-none"
       )}
-        style={{ marginRight: useGrid.getState().selected ? 432 : 0 }}>
-        <ToolBtn icon={Ruler} label="Measure" shortcut="M" />
-        <ToolBtn icon={Globe2} label="Globe" />
-        <ToolBtn icon={Download} label="Export" />
+        style={{ marginRight: selected ? 432 : 0 }}>
+        <ToolBtn icon={Ruler} label="Measure" shortcut="M" onClick={handleMeasure} active={measureMode} />
+        <ToolBtn icon={Globe2} label="Globe" onClick={handleGlobe} />
+        <ToolBtn icon={Download} label="Export" onClick={handleExport} />
         <ToolBtn
           icon={presentation ? Minimize2 : Maximize2}
           label={presentation ? "Exit Presentation" : "Presentation"}
@@ -80,11 +129,14 @@ export function TopBar() {
   );
 }
 
-function ToolBtn({ icon: Icon, label, shortcut, onClick }: { icon: React.ComponentType<{ className?: string }>; label: string; shortcut?: string; onClick?: () => void }) {
+function ToolBtn({ icon: Icon, label, shortcut, onClick, active }: { icon: React.ComponentType<{ className?: string }>; label: string; shortcut?: string; onClick?: () => void; active?: boolean }) {
   return (
     <button
       onClick={onClick}
-      className="glass-pill rounded-md h-9 px-2.5 flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:border-primary/40 transition group"
+      className={cn(
+        "glass-pill rounded-md h-9 px-2.5 flex items-center gap-1.5 text-[11px] hover:text-foreground hover:border-primary/40 transition group",
+        active ? "text-primary border-primary/60" : "text-muted-foreground"
+      )}
     >
       <Icon className="size-3.5" />
       <span className="hidden md:inline">{label}</span>
