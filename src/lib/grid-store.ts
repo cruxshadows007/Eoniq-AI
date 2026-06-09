@@ -41,6 +41,9 @@ interface GridState {
   presentationMode: boolean;
   togglePresentation: () => void;
 
+  measureMode: boolean;
+  toggleMeasure: () => void;
+
   capacityRange: [number, number]; // MW
   setCapacityRange: (r: [number, number]) => void;
 
@@ -86,6 +89,9 @@ export const useGrid = create<GridState>()(
 
       presentationMode: false,
       togglePresentation: () => set((s) => ({ presentationMode: !s.presentationMode })),
+
+      measureMode: false,
+      toggleMeasure: () => set((s) => ({ measureMode: !s.measureMode })),
 
       capacityRange: [0, 2500],
       setCapacityRange: (r) => set({ capacityRange: r }),
