@@ -4,6 +4,7 @@ import { LeftPanel } from "@/components/grid/LeftPanel";
 import { TopBar } from "@/components/grid/TopBar";
 import { DetailPanel } from "@/components/grid/DetailPanel";
 import { MiniMap } from "@/components/grid/MiniMap";
+import { Toaster } from "@/components/ui/sonner";
 
 const MapView = lazy(() => import("@/components/grid/MapView").then((m) => ({ default: m.MapView })));
 
@@ -31,6 +32,7 @@ function GridAtlasPage() {
         <DetailPanel />
         <MiniMap />
       </main>
+      <Toaster />
     </div>
   );
 }
