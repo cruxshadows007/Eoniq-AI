@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "generatedAt": "2026-06-09T00:00:00Z",
+  "documents": [
+    {
+      "id": "readme",
+      "name": "README.md",
+      "path": "/knowledge/README.md",
+      "format": "md",
+      "sizeBytes": 980,
+      "modifiedAt": "2026-06-09T00:00:00Z",
+      "status": "reference",
+      "tags": ["meta"]
+    }
+  ]
+}
