@@ -31,6 +31,11 @@ export function MapView() {
   const capacityRange = useGrid((s) => s.capacityRange);
   const yearRange = useGrid((s) => s.yearRange);
   const select = useGrid((s) => s.select);
+  const view = useGrid((s) => s.view);
+  const viewVersion = useGrid((s) => s.viewVersion);
+  const measureMode = useGrid((s) => s.measureMode);
+  const measurePoints = useGrid((s) => s.measurePoints);
+  const addMeasurePoint = useGrid((s) => s.addMeasurePoint);
   const { data: DATA } = useGridData();
 
   // Init map once
