@@ -25,7 +25,7 @@ export function MiniMap() {
         <div className="relative w-[200px] h-[110px] rounded overflow-hidden bg-[#050811] border border-[var(--panel-border)]">
           <svg viewBox="0 0 200 110" className="absolute inset-0">
             {DOTS.map(([x, y], i) => (
-              <circle key={i} cx={x} cy={y} r={0.55} fill="#1e3a5f" />
+              <circle key={i} cx={x} cy={y} r={0.7} fill="#3a6ea5" opacity={0.85} />
             ))}
             <rect x={cx - 14} y={cy - 9} width={28} height={18} fill="none" stroke="#00F0FF" strokeWidth={0.8} opacity={0.8} />
             <circle cx={cx} cy={cy} r={1.5} fill="#00F0FF" />
