@@ -258,6 +258,47 @@ export function MapView() {
     overlay.setProps({ layers: deckLayers });
   }, [mapReady, layers, enabledTechs, search, capacityRange, yearRange, select, DATA]);
 
+  // External view updates (e.g. Globe button) — flyTo target without fighting the move event.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    if (viewVersion === 0) return;
+    try {
+      map.flyTo({
+        center: [view.longitude, view.latitude],
+        zoom: view.zoom,
+        pitch: view.pitch,
+        bearing: view.bearing,
+        duration: 1200,
+        essential: true,
+      });
+    } catch (err) {
+      console.warn("[GridAtlas] flyTo failed", err);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewVersion, mapReady]);
+
+  // Measure tool — capture map clicks while measureMode is on.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    const canvas = map.getCanvas();
+    if (measureMode) canvas.style.cursor = "crosshair";
+    else canvas.style.cursor = "";
+    if (!measureMode) return;
+    const handler = (e: maplibregl.MapMouseEvent) => {
+      addMeasurePoint({ lon: e.lngLat.lng, lat: e.lngLat.lat });
+    };
+    map.on("click", handler);
+    return () => {
+      map.off("click", handler);
+      canvas.style.cursor = "";
+    };
+  }, [measureMode, mapReady, addMeasurePoint]);
+
+  const measureDistanceKm =
+    measurePoints.length === 2 ? haversineKm(measurePoints[0], measurePoints[1]) : null;
+
   return (
     <div className="absolute inset-0">
       <div ref={containerRef} className="absolute inset-0 h-full w-full" />
