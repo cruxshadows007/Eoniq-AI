@@ -233,8 +233,12 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
       ...data.datacenters.map((d) => ({ ...d, kind: "datacenter" as const })),
     ];
     return all
-      .filter((a) => a.name.toLowerCase().includes(term) || ("operator" in a && a.operator?.toLowerCase().includes(term)))
-      .slice(0, 12);
+      .filter((a) =>
+        a.name.toLowerCase().includes(term) ||
+        ("operator" in a && a.operator?.toLowerCase().includes(term)) ||
+        ("country" in a && a.country?.toLowerCase().includes(term))
+      )
+      .slice(0, 20);
   }, [q, data]);
 
   useEffect(() => {

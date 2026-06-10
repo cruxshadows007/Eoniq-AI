@@ -18,9 +18,12 @@ export interface SelectedAsset {
   kind: "plant" | "substation" | "datacenter" | "line" | "cable";
 }
 
+export type MeasurePoint = { lon: number; lat: number };
+
 interface GridState {
   view: ViewState;
   setView: (v: Partial<ViewState>) => void;
+  viewVersion: number;
 
   layers: Record<LayerId, boolean>;
   toggleLayer: (id: LayerId) => void;
@@ -43,6 +46,9 @@ interface GridState {
 
   measureMode: boolean;
   toggleMeasure: () => void;
+  measurePoints: MeasurePoint[];
+  addMeasurePoint: (p: MeasurePoint) => void;
+  clearMeasure: () => void;
 
   capacityRange: [number, number]; // MW
   setCapacityRange: (r: [number, number]) => void;
@@ -52,6 +58,9 @@ interface GridState {
 
   favorites: string[];
   toggleFavorite: (id: string) => void;
+
+  chatOpen: boolean;
+  toggleChat: () => void;
 }
 
 const ALL_TECHS: TechType[] = [
@@ -63,7 +72,8 @@ export const useGrid = create<GridState>()(
   persist(
     (set, get) => ({
       view: { longitude: 8, latitude: 32, zoom: 2.2, pitch: 35, bearing: 0 },
-      setView: (v) => set((s) => ({ view: { ...s.view, ...v } })),
+      viewVersion: 0,
+      setView: (v) => set((s) => ({ view: { ...s.view, ...v }, viewVersion: s.viewVersion + 1 })),
 
       layers: {
         plants: true, substations: true, transmission: true,
@@ -91,7 +101,12 @@ export const useGrid = create<GridState>()(
       togglePresentation: () => set((s) => ({ presentationMode: !s.presentationMode })),
 
       measureMode: false,
-      toggleMeasure: () => set((s) => ({ measureMode: !s.measureMode })),
+      toggleMeasure: () =>
+        set((s) => ({ measureMode: !s.measureMode, measurePoints: [] })),
+      measurePoints: [],
+      addMeasurePoint: (p) =>
+        set((s) => ({ measurePoints: s.measurePoints.length >= 2 ? [p] : [...s.measurePoints, p] })),
+      clearMeasure: () => set({ measurePoints: [] }),
 
       capacityRange: [0, 2500],
       setCapacityRange: (r) => set({ capacityRange: r }),
@@ -106,6 +121,9 @@ export const useGrid = create<GridState>()(
             ? s.favorites.filter((x) => x !== id)
             : [...s.favorites, id],
         })),
+
+      chatOpen: false,
+      toggleChat: () => set((s) => ({ chatOpen: !s.chatOpen })),
     }),
     {
       name: "gridatlas-state",
