@@ -8,11 +8,12 @@ const WORLD = { minLon: -180, maxLon: 180, minLat: -60, maxLat: 75 };
 const DOTS = generateLandDots();
 
 export function MiniMap() {
+  // Hooks must run unconditionally before any early return to keep React's
+  // hook order stable across renders (toggling presentation mode would
+  // otherwise trip "Rendered fewer hooks than expected").
   const presentation = useGrid((s) => s.presentationMode);
-  if (presentation) return null;
-  // We don't currently track viewport bounds from MapLibre here in a reactive way;
-  // we approximate using stored center as a hint.
   const view = useGrid((s) => s.view);
+  if (presentation) return null;
 
   const cx = lonToX(view.longitude);
   const cy = latToY(view.latitude);
