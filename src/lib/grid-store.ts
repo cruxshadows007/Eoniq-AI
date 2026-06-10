@@ -18,9 +18,12 @@ export interface SelectedAsset {
   kind: "plant" | "substation" | "datacenter" | "line" | "cable";
 }
 
+export type MeasurePoint = { lon: number; lat: number };
+
 interface GridState {
   view: ViewState;
   setView: (v: Partial<ViewState>) => void;
+  viewVersion: number;
 
   layers: Record<LayerId, boolean>;
   toggleLayer: (id: LayerId) => void;
@@ -43,6 +46,9 @@ interface GridState {
 
   measureMode: boolean;
   toggleMeasure: () => void;
+  measurePoints: MeasurePoint[];
+  addMeasurePoint: (p: MeasurePoint) => void;
+  clearMeasure: () => void;
 
   capacityRange: [number, number]; // MW
   setCapacityRange: (r: [number, number]) => void;
@@ -52,6 +58,9 @@ interface GridState {
 
   favorites: string[];
   toggleFavorite: (id: string) => void;
+
+  chatOpen: boolean;
+  toggleChat: () => void;
 }
 
 const ALL_TECHS: TechType[] = [
