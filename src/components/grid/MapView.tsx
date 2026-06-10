@@ -315,9 +315,30 @@ export function MapView() {
       <div className="pointer-events-none absolute bottom-3 left-3 mono text-[10px] tracking-wider text-muted-foreground glass-pill rounded-md px-2 py-1">
         {viewSnap.lat.toFixed(3)}°, {viewSnap.lon.toFixed(3)}° · Z {viewSnap.zoom.toFixed(2)}
       </div>
+      {/* Measure overlay */}
+      {measureMode && (
+        <div className="pointer-events-none absolute top-16 left-1/2 -translate-x-1/2 glass-panel rounded-md px-3 py-1.5 text-[11px] z-30">
+          {measurePoints.length === 0 && <span className="text-muted-foreground">Click the first point on the map…</span>}
+          {measurePoints.length === 1 && <span className="text-muted-foreground">Click the second point to measure…</span>}
+          {measureDistanceKm != null && (
+            <span className="mono text-primary">Distance: {measureDistanceKm.toFixed(1)} km</span>
+          )}
+        </div>
+      )}
       {hover && <Tooltip h={hover} />}
     </div>
   );
+}
+
+function haversineKm(a: { lon: number; lat: number }, b: { lon: number; lat: number }) {
+  const R = 6371;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLon = toRad(b.lon - a.lon);
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
 }
 
 function Tooltip({ h }: { h: NonNullable<HoverInfo> }) {
