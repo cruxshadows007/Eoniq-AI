@@ -1,16 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bot, MessageSquare, Send, X, Loader2, AlertTriangle } from "lucide-react";
+import { Bot, MessageSquare, Send, X, Loader2, AlertTriangle, Link2 } from "lucide-react";
 import { useGrid } from "@/lib/grid-store";
 import { cn } from "@/lib/utils";
 
-type ChatMessage = { role: "user" | "assistant"; content: string };
+type Source = string | { title?: string; url?: string; source?: string; [k: string]: unknown };
+
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  sources?: Source[];
+  route?: string;
+};
 
 const GREETING: ChatMessage = {
   role: "assistant",
   content:
     "Hola — soy tu analista energético. Pregúntame sobre generación renovable, redes eléctricas, centros de datos o planificación de infraestructura.",
 };
+
+const RAG_ENDPOINT = "https://hanslaston-energy-intelligence-api.hf.space/chat";
+const REQUEST_TIMEOUT_MS = 15000;
 
 export function ChatPanel() {
   const open = useGrid((s) => s.chatOpen);
@@ -30,32 +40,46 @@ export function ChatPanel() {
   const send = useCallback(async () => {
     const text = input.trim();
     if (!text || status === "loading") return;
-    const next: ChatMessage[] = [...messages, { role: "user", content: text }];
-    setMessages(next);
+    setMessages((m) => [...m, { role: "user", content: text }]);
     setInput("");
     setStatus("loading");
     setError(null);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch(RAG_ENDPOINT, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next.filter((m) => m !== GREETING) }),
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ question: text }),
+        signal: controller.signal,
       });
-      const data = (await res.json()) as { content?: string; error?: string };
-      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
-      setMessages((m) => [...m, { role: "assistant", content: data.content ?? "" }]);
+      clearTimeout(timeoutId);
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      const data = (await res.json()) as { answer?: string; sources?: Source[]; route?: string };
+      setMessages((m) => [
+        ...m,
+        {
+          role: "assistant",
+          content: data.answer ?? "(respuesta vacía)",
+          sources: Array.isArray(data.sources) ? data.sources : undefined,
+          route: data.route,
+        },
+      ]);
       setStatus("idle");
     } catch (e) {
+      clearTimeout(timeoutId);
+      const aborted = e instanceof DOMException && e.name === "AbortError";
       setStatus("error");
-      setError(e instanceof Error ? e.message : String(e));
+      setError(aborted ? "Tiempo de espera agotado (15s). Intenta de nuevo." : e instanceof Error ? e.message : String(e));
     }
-  }, [input, messages, status]);
+  }, [input, status]);
 
   if (presentation) return null;
 
   return (
     <>
-      {/* Floating launcher */}
       <button
         onClick={toggle}
         aria-label="Open AI assistant"
@@ -85,7 +109,7 @@ export function ChatPanel() {
               <div className="flex-1 min-w-0">
                 <div className="text-[12px] font-semibold">Energy Analyst</div>
                 <div className="mono text-[9px] uppercase tracking-wider text-muted-foreground">
-                  Powered by Groq
+                  RAG · Energy Intelligence
                 </div>
               </div>
               <button
@@ -107,7 +131,45 @@ export function ChatPanel() {
                   )}
                 >
                   {m.role === "assistant" ? (
-                    <div className="text-foreground whitespace-pre-wrap">{m.content}</div>
+                    <div className="space-y-1.5">
+                      <div className="text-foreground whitespace-pre-wrap">{m.content}</div>
+                      {m.route && (
+                        <div className="mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                          route · <span className="text-primary">{m.route}</span>
+                        </div>
+                      )}
+                      {m.sources && m.sources.length > 0 && (
+                        <div className="mt-1 border-t border-[var(--panel-border)] pt-1.5">
+                          <div className="mono text-[9px] uppercase tracking-wider text-muted-foreground mb-1">
+                            Sources ({m.sources.length})
+                          </div>
+                          <ul className="space-y-1">
+                            {m.sources.map((s, j) => {
+                              const label =
+                                typeof s === "string" ? s : s.title ?? s.source ?? s.url ?? JSON.stringify(s);
+                              const url = typeof s === "object" ? s.url : undefined;
+                              return (
+                                <li key={j} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                                  <Link2 className="size-3 mt-0.5 shrink-0 text-primary/70" />
+                                  {url ? (
+                                    <a
+                                      href={url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="hover:text-primary underline-offset-2 hover:underline break-all"
+                                    >
+                                      {label}
+                                    </a>
+                                  ) : (
+                                    <span className="break-all">{label}</span>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div className="inline-block px-3 py-2 rounded-lg bg-primary/15 border border-primary/30 text-foreground whitespace-pre-wrap max-w-[85%]">
                       {m.content}
@@ -118,7 +180,7 @@ export function ChatPanel() {
               {status === "loading" && (
                 <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                   <Loader2 className="size-3.5 animate-spin text-primary" />
-                  Pensando…
+                  Consultando base de conocimiento…
                 </div>
               )}
               {status === "error" && (
