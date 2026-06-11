@@ -255,8 +255,40 @@ export function MapView() {
       );
     }
 
+    if (measurePoints.length > 0) {
+      deckLayers.push(
+        new ScatterplotLayer({
+          id: "measure-points",
+          data: measurePoints,
+          getPosition: (d: any) => [d.lon, d.lat],
+          getFillColor: [0, 240, 255, 240],
+          getLineColor: [255, 255, 255, 255],
+          stroked: true,
+          lineWidthMinPixels: 2,
+          radiusMinPixels: 6,
+          radiusMaxPixels: 8,
+          getRadius: 6,
+          pickable: false,
+        })
+      );
+      if (measurePoints.length === 2) {
+        deckLayers.push(
+          new PathLayer({
+            id: "measure-line",
+            data: [{ path: measurePoints.map((p) => [p.lon, p.lat]) }],
+            getPath: (d: any) => d.path,
+            getColor: [0, 240, 255, 230],
+            getWidth: 3,
+            widthMinPixels: 2,
+            widthMaxPixels: 4,
+            pickable: false,
+          })
+        );
+      }
+    }
+
     overlay.setProps({ layers: deckLayers });
-  }, [mapReady, layers, enabledTechs, search, capacityRange, yearRange, select, DATA]);
+  }, [mapReady, layers, enabledTechs, search, capacityRange, yearRange, select, DATA, measurePoints]);
 
   // External view updates (e.g. Globe button) — flyTo target without fighting the move event.
   useEffect(() => {
