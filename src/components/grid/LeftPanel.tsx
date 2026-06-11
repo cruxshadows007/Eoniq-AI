@@ -73,9 +73,9 @@ export function LeftPanel() {
         </div>
         {!collapsed && (
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-semibold tracking-tight text-glow-primary">GridAtlas</div>
+            <div className="text-[13px] font-semibold tracking-tight text-glow-primary">EONIQ</div>
             <div className="mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
-              Infrastructure Intelligence
+              AI Powered Energy Intelligence Platform
             </div>
           </div>
         )}
