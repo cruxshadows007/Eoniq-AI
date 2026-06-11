@@ -12,10 +12,10 @@ const MapView = lazy(() => import("@/components/grid/MapView").then((m) => ({ de
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "GridAtlas — Global Infrastructure Intelligence" },
-      { name: "description", content: "Explore the world's energy, electrical, industrial and digital infrastructure on a premium interactive 3D map." },
-      { property: "og:title", content: "GridAtlas — Global Infrastructure Intelligence" },
-      { property: "og:description", content: "Explore the world's energy, electrical, industrial and digital infrastructure on a premium interactive 3D map." },
+      { title: "EONIQ — AI Powered Energy Intelligence Platform" },
+      { name: "description", content: "EONIQ is an AI powered energy intelligence platform to explore the world's energy, electrical, industrial and digital infrastructure on a premium interactive 3D map." },
+      { property: "og:title", content: "EONIQ — AI Powered Energy Intelligence Platform" },
+      { property: "og:description", content: "EONIQ is an AI powered energy intelligence platform to explore the world's energy, electrical, industrial and digital infrastructure on a premium interactive 3D map." },
     ],
   }),
   component: GridAtlasPage,
