@@ -82,10 +82,6 @@ print("Embeddings cargados")
 
 """## 4 Conectamos a Groq"""
 
-import os
-
-os.environ["GROQ_API_KEY"] = "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"
-
 from groq import Groq
 
 client = Groq(
