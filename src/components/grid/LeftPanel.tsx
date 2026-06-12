@@ -49,6 +49,15 @@ export function LeftPanel() {
   const setYearRange = useGrid((s) => s.setYearRange);
   const favorites = useGrid((s) => s.favorites);
   const { data } = useGridData();
+  const isMobile = useIsMobile();
+
+  // On mobile, default to collapsed so map is fully visible on first load.
+  useEffect(() => {
+    if (isMobile && !collapsed) {
+      useGrid.setState({ leftCollapsed: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMobile]);
 
   // Apply same filters as MapView so telemetry reflects the visible subset
   const q = search.toLowerCase().trim();
