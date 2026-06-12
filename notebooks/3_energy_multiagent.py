@@ -82,7 +82,11 @@ print("Embeddings cargados")
 
 """## 4 Conectamos a Groq"""
 
+import os
 from groq import Groq
+from google.colab import userdata
+
+os.environ["GROQ_API_KEY"] = userdata.get("GROQ_API_KEY")
 
 client = Groq(
     api_key=os.environ["GROQ_API_KEY"]
