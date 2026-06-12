@@ -4,6 +4,7 @@ import { Search, Command, Maximize2, Minimize2, Ruler, Clock, Globe2, Download, 
 import { toast } from "sonner";
 import { useGrid } from "@/lib/grid-store";
 import { useGridData } from "@/lib/grid-source";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 export function TopBar() {
