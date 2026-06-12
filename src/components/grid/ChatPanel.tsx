@@ -147,15 +147,17 @@ export function ChatPanel() {
                             {m.sources.map((s, j) => {
                               const label =
                                 typeof s === "string" ? s : s.title ?? s.source ?? s.url ?? JSON.stringify(s);
-                              const url = typeof s === "object" ? s.url : undefined;
+                              const rawUrl = typeof s === "object" ? s.url : undefined;
+                              const safeUrl =
+                                typeof rawUrl === "string" && /^https?:\/\//i.test(rawUrl) ? rawUrl : undefined;
                               return (
                                 <li key={j} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
                                   <Link2 className="size-3 mt-0.5 shrink-0 text-primary/70" />
-                                  {url ? (
+                                  {safeUrl ? (
                                     <a
-                                      href={url}
+                                      href={safeUrl}
                                       target="_blank"
-                                      rel="noreferrer"
+                                      rel="noopener noreferrer"
                                       className="hover:text-primary underline-offset-2 hover:underline break-all"
                                     >
                                       {label}
