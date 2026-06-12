@@ -1,13 +1,15 @@
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft, ChevronRight, Search, Layers, Filter, Star, Activity,
   Sun, Wind, Waves, Droplets, Atom, Flame, Factory, Cylinder, Leaf,
-  Mountain, Battery, Server, Zap, Cable, Settings, Eye, EyeOff,
+  Mountain, Battery, Server, Zap, Cable, Settings, Eye, EyeOff, Menu, X,
 } from "lucide-react";
 import { useGrid } from "@/lib/grid-store";
 import { useGridData } from "@/lib/grid-source";
 import { TECH_HEX, TECH_LABEL } from "@/lib/grid-data";
 import { Slider } from "@/components/ui/slider";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 const TECH_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
