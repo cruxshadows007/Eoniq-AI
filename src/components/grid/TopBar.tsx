@@ -4,6 +4,7 @@ import { Search, Command, Maximize2, Minimize2, Ruler, Clock, Globe2, Download, 
 import { toast } from "sonner";
 import { useGrid } from "@/lib/grid-store";
 import { useGridData } from "@/lib/grid-source";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 export function TopBar() {
@@ -13,8 +14,11 @@ export function TopBar() {
   const setView = useGrid((s) => s.setView);
   const measureMode = useGrid((s) => s.measureMode);
   const toggleMeasure = useGrid((s) => s.toggleMeasure);
+  const leftCollapsed = useGrid((s) => s.leftCollapsed);
   const { data } = useGridData();
+  const isMobile = useIsMobile();
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const hideClusterOnMobile = isMobile && !leftCollapsed;
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -79,12 +83,12 @@ export function TopBar() {
   return (
     <>
       <div className={cn(
-        "absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 transition-opacity",
+        "absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 transition-opacity hidden sm:flex",
         presentation && "opacity-0 pointer-events-none"
       )}>
         <button
           onClick={() => setPaletteOpen(true)}
-          className="glass-pill rounded-md h-9 pl-3 pr-2 flex items-center gap-2 text-[12px] text-muted-foreground hover:text-foreground hover:border-primary/40 transition group min-w-[360px]"
+          className="glass-pill rounded-md h-9 pl-3 pr-2 flex items-center gap-2 text-[12px] text-muted-foreground hover:text-foreground hover:border-primary/40 transition group min-w-[280px] sm:min-w-[360px]"
         >
           <Search className="size-3.5" />
           <span className="flex-1 text-left">Search the global grid…</span>
@@ -96,10 +100,11 @@ export function TopBar() {
 
       {/* Top-right utility cluster */}
       <div className={cn(
-        "absolute top-3 right-3 z-40 flex items-center gap-2 transition-[margin,opacity] duration-300",
-        presentation && "opacity-0 pointer-events-none"
+        "absolute top-3 right-3 z-30 flex items-center gap-1.5 sm:gap-2 transition-[margin,opacity] duration-300",
+        presentation && "opacity-0 pointer-events-none",
+        hideClusterOnMobile && "opacity-0 pointer-events-none"
       )}
-        style={{ marginRight: selected ? 432 : 0 }}>
+        style={{ marginRight: selected && !isMobile ? 432 : 0 }}>
         <ToolBtn icon={Ruler} label="Measure" shortcut="M" onClick={handleMeasure} active={measureMode} />
         <ToolBtn icon={Globe2} label="Globe" onClick={handleGlobe} />
         <ToolBtn icon={Download} label="Export" onClick={handleExport} />
@@ -168,10 +173,10 @@ function Timeline({ hidden }: { hidden: boolean }) {
   if (hidden) return null;
 
   return (
-    <div className="absolute left-1/2 -translate-x-1/2 bottom-3 z-20"
+    <div className="absolute left-1/2 -translate-x-1/2 bottom-3 z-20 w-[94vw] sm:w-auto px-2 sm:px-0"
       style={{ marginRight: 0 }}
     >
-      <div className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3 min-w-[520px] shadow-2xl">
+      <div className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3 w-full sm:min-w-[520px] shadow-2xl">
         <button
           onClick={() => setPlaying((p) => !p)}
           className="size-7 grid place-items-center rounded-md bg-primary/15 hover:bg-primary/25 border border-primary/30 text-primary"

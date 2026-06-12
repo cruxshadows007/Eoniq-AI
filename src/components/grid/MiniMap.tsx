@@ -19,7 +19,7 @@ export function MiniMap() {
   const cy = latToY(view.latitude);
 
   return (
-    <div className="absolute bottom-3 right-3 z-20">
+    <div className="absolute bottom-3 right-3 z-20 hidden md:block">
       <div className="glass-panel rounded-md p-2 shadow-2xl">
         <div className="mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground mb-1 px-0.5">Overview</div>
         <div className="relative w-[200px] h-[110px] rounded overflow-hidden bg-[#050811] border border-[var(--panel-border)]">

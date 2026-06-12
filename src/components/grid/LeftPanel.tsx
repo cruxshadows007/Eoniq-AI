@@ -1,13 +1,15 @@
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft, ChevronRight, Search, Layers, Filter, Star, Activity,
   Sun, Wind, Waves, Droplets, Atom, Flame, Factory, Cylinder, Leaf,
-  Mountain, Battery, Server, Zap, Cable, Settings, Eye, EyeOff,
+  Mountain, Battery, Server, Zap, Cable, Settings, Eye, EyeOff, Menu, X,
 } from "lucide-react";
 import { useGrid } from "@/lib/grid-store";
 import { useGridData } from "@/lib/grid-source";
 import { TECH_HEX, TECH_LABEL } from "@/lib/grid-data";
 import { Slider } from "@/components/ui/slider";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 const TECH_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -47,6 +49,15 @@ export function LeftPanel() {
   const setYearRange = useGrid((s) => s.setYearRange);
   const favorites = useGrid((s) => s.favorites);
   const { data } = useGridData();
+  const isMobile = useIsMobile();
+
+  // On mobile, default to collapsed so map is fully visible on first load.
+  useEffect(() => {
+    if (isMobile && !collapsed) {
+      useGrid.setState({ leftCollapsed: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMobile]);
 
   // Apply same filters as MapView so telemetry reflects the visible subset
   const q = search.toLowerCase().trim();
@@ -97,13 +108,40 @@ export function LeftPanel() {
   };
   const LAYERS = LAYER_META.map((l) => ({ ...l, count: LAYER_COUNTS[l.id] }));
 
+  const expandedWidth = isMobile ? Math.min(360, typeof window !== "undefined" ? window.innerWidth * 0.88 : 360) : 380;
+  const collapsedWidth = isMobile ? 0 : 56;
+
   return (
-    <motion.aside
-      initial={false}
-      animate={{ width: collapsed ? 56 : 380 }}
-      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      className="relative z-20 h-full glass-panel border-r flex flex-col shrink-0"
-    >
+    <>
+      {/* Mobile floating menu button when panel hidden */}
+      {isMobile && collapsed && (
+        <button
+          onClick={toggle}
+          aria-label="Open filters"
+          className="fixed top-3 left-3 z-40 size-10 rounded-md glass-pill flex items-center justify-center text-foreground shadow-lg"
+        >
+          <Menu className="size-5" />
+        </button>
+      )}
+
+      {/* Mobile backdrop when open */}
+      {isMobile && !collapsed && (
+        <button
+          aria-label="Close filters"
+          onClick={toggle}
+          className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm md:hidden"
+        />
+      )}
+
+      <motion.aside
+        initial={false}
+        animate={{ width: collapsed ? collapsedWidth : expandedWidth }}
+        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        className={cn(
+          "h-full glass-panel border-r flex flex-col shrink-0 overflow-hidden",
+          isMobile ? "fixed inset-y-0 left-0 z-40" : "relative z-20"
+        )}
+      >
       {/* Header / brand */}
       <div className="flex items-center gap-3 px-3 h-14 border-b border-[var(--panel-border)]">
         <div className="relative shrink-0 size-9 rounded-md bg-gradient-to-br from-[#00F0FF]/30 to-[#7B61FF]/20 ring-glow flex items-center justify-center">
@@ -115,7 +153,7 @@ export function LeftPanel() {
         {!collapsed && (
           <div className="flex-1 min-w-0">
             <div className="text-[13px] font-semibold tracking-tight text-glow-primary">EONIQ</div>
-            <div className="mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+            <div className="mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground truncate">
               AI Powered Energy Intelligence Platform
             </div>
           </div>
@@ -125,7 +163,7 @@ export function LeftPanel() {
           className="size-7 grid place-items-center rounded-md hover:bg-white/5 text-muted-foreground hover:text-foreground transition"
           aria-label="Toggle panel"
         >
-          {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
+          {isMobile ? <X className="size-4" /> : collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
         </button>
       </div>
 
@@ -280,6 +318,7 @@ export function LeftPanel() {
         </div>
       )}
     </motion.aside>
+    </>
   );
 }
 

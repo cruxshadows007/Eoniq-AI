@@ -33,7 +33,7 @@ export function DetailPanel() {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 60, opacity: 0 }}
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute top-3 right-3 bottom-3 z-30 w-[420px] glass-panel rounded-lg shadow-2xl flex flex-col overflow-hidden scanline"
+          className="absolute top-3 right-3 bottom-3 z-30 w-[420px] max-w-[calc(100vw-1.5rem)] glass-panel rounded-lg shadow-2xl flex flex-col overflow-hidden scanline"
         >
           {/* Header */}
           <div className="px-4 pt-3.5 pb-3 border-b border-[var(--panel-border)]">
