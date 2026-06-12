@@ -46,13 +46,54 @@ export function LeftPanel() {
   const yearRange = useGrid((s) => s.yearRange);
   const setYearRange = useGrid((s) => s.setYearRange);
   const favorites = useGrid((s) => s.favorites);
-  const { data, totals: TOTALS } = useGridData();
+  const { data } = useGridData();
+
+  // Apply same filters as MapView so telemetry reflects the visible subset
+  const q = search.toLowerCase().trim();
+  const passText = (s: string) => !q || s.toLowerCase().includes(q);
+
+  const fPlants = data.plants.filter((p) =>
+    enabledTechs[p.tech] &&
+    p.capacityMW >= capacityRange[0] && p.capacityMW <= capacityRange[1] &&
+    p.year >= yearRange[0] && p.year <= yearRange[1] &&
+    (passText(p.name) || passText(p.operator) || passText(p.country))
+  );
+  const fSubs = data.substations.filter((s) =>
+    passText(s.name) || passText(s.operator) || passText(s.country)
+  );
+  const fDcs = data.datacenters.filter((d) =>
+    passText(d.name) || passText(d.operator) || passText(d.country)
+  );
+  const fLines = layers.transmission ? data.lines : [];
+  const fCables = layers.cables ? data.cables : [];
+
+  const visPlants = layers.plants ? fPlants : [];
+  const visSubs = layers.substations ? fSubs : [];
+  const visDcs = layers.datacenters ? fDcs : [];
+
+  const TOTALS = {
+    assets: visPlants.length + visSubs.length + visDcs.length,
+    capacityGW: Math.round(visPlants.reduce((s, p) => s + p.capacityMW, 0) / 1000),
+    countries: new Set([
+      ...visPlants.map((p) => p.country),
+      ...visSubs.map((s) => s.country),
+      ...visDcs.map((d) => d.country),
+    ]).size,
+    operators: new Set([
+      ...visPlants.map((p) => p.operator),
+      ...visSubs.map((s) => s.operator),
+      ...visDcs.map((d) => d.operator),
+    ]).size,
+    transmissionKm: fLines.reduce((s, l) => s + l.lengthKm, 0),
+    datacenters: visDcs.length,
+  };
+
   const LAYER_COUNTS: Record<LayerMeta["id"], number> = {
-    plants: data.plants.length,
-    substations: data.substations.length,
-    transmission: data.lines.length,
-    datacenters: data.datacenters.length,
-    cables: data.cables.length,
+    plants: fPlants.length,
+    substations: fSubs.length,
+    transmission: fLines.length,
+    datacenters: fDcs.length,
+    cables: fCables.length,
   };
   const LAYERS = LAYER_META.map((l) => ({ ...l, count: LAYER_COUNTS[l.id] }));
 
