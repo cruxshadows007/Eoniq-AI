@@ -100,10 +100,11 @@ export function TopBar() {
 
       {/* Top-right utility cluster */}
       <div className={cn(
-        "absolute top-3 right-3 z-40 flex items-center gap-2 transition-[margin,opacity] duration-300",
-        presentation && "opacity-0 pointer-events-none"
+        "absolute top-3 right-3 z-30 flex items-center gap-1.5 sm:gap-2 transition-[margin,opacity] duration-300",
+        presentation && "opacity-0 pointer-events-none",
+        hideClusterOnMobile && "opacity-0 pointer-events-none"
       )}
-        style={{ marginRight: selected ? 432 : 0 }}>
+        style={{ marginRight: selected && !isMobile ? 432 : 0 }}>
         <ToolBtn icon={Ruler} label="Measure" shortcut="M" onClick={handleMeasure} active={measureMode} />
         <ToolBtn icon={Globe2} label="Globe" onClick={handleGlobe} />
         <ToolBtn icon={Download} label="Export" onClick={handleExport} />
