@@ -79,12 +79,12 @@ export function TopBar() {
   return (
     <>
       <div className={cn(
-        "absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 transition-opacity",
+        "absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 transition-opacity hidden sm:flex",
         presentation && "opacity-0 pointer-events-none"
       )}>
         <button
           onClick={() => setPaletteOpen(true)}
-          className="glass-pill rounded-md h-9 pl-3 pr-2 flex items-center gap-2 text-[12px] text-muted-foreground hover:text-foreground hover:border-primary/40 transition group min-w-[360px]"
+          className="glass-pill rounded-md h-9 pl-3 pr-2 flex items-center gap-2 text-[12px] text-muted-foreground hover:text-foreground hover:border-primary/40 transition group min-w-[280px] sm:min-w-[360px]"
         >
           <Search className="size-3.5" />
           <span className="flex-1 text-left">Search the global grid…</span>
