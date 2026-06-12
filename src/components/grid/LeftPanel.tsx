@@ -318,6 +318,7 @@ export function LeftPanel() {
         </div>
       )}
     </motion.aside>
+    </>
   );
 }
 
