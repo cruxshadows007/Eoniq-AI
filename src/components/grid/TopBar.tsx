@@ -173,10 +173,10 @@ function Timeline({ hidden }: { hidden: boolean }) {
   if (hidden) return null;
 
   return (
-    <div className="absolute left-1/2 -translate-x-1/2 bottom-3 z-20"
+    <div className="absolute left-1/2 -translate-x-1/2 bottom-3 z-20 w-[94vw] sm:w-auto px-2 sm:px-0"
       style={{ marginRight: 0 }}
     >
-      <div className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3 min-w-[520px] shadow-2xl">
+      <div className="glass-panel rounded-lg px-3 py-2 flex items-center gap-3 w-full sm:min-w-[520px] shadow-2xl">
         <button
           onClick={() => setPlaying((p) => !p)}
           className="size-7 grid place-items-center rounded-md bg-primary/15 hover:bg-primary/25 border border-primary/30 text-primary"
