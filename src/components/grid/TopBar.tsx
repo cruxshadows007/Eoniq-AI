@@ -14,8 +14,11 @@ export function TopBar() {
   const setView = useGrid((s) => s.setView);
   const measureMode = useGrid((s) => s.measureMode);
   const toggleMeasure = useGrid((s) => s.toggleMeasure);
+  const leftCollapsed = useGrid((s) => s.leftCollapsed);
   const { data } = useGridData();
+  const isMobile = useIsMobile();
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const hideClusterOnMobile = isMobile && !leftCollapsed;
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
